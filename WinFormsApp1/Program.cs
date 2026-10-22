@@ -1,3 +1,5 @@
+using WinFormsApp1.Models;
+using WinFormsApp1.Data;
 namespace WinFormsApp1
 {
     internal static class Program
@@ -10,7 +12,11 @@ namespace WinFormsApp1
         {
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
-            ApplicationConfiguration.Initialize();
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            UserStorage.Load();
+            AppointmentStorage.Load();
+            MasterStorage.Load();
             Application.Run(new Form1());
         }
     }
