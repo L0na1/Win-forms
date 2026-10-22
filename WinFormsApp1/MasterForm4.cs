@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
+using WinFormsApp1.Database;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
@@ -12,6 +12,7 @@ namespace WinFormsApp1
     public partial class MasterForm : Form
     {
         private int _selectedId = -1;
+
         public MasterForm()
         {
             InitializeComponent();
@@ -51,13 +52,22 @@ namespace WinFormsApp1
 
         private void LoadMasters()
         {
-            dgv.DataSource = null;
-            dgv.DataSource = MasterStorage.All.ToList();
+            try
+            {
+                dgv.DataSource = null;
+                // ← ЗАМЕНА: MasterStorage.All → MasterRepository.GetAll
+                dgv.DataSource = MasterRepository.GetAll();
 
-            if (dgv.Columns["Id"] != null) dgv.Columns["Id"].Visible = false;
-            if (dgv.Columns["FullName"] != null) dgv.Columns["FullName"].HeaderText = "ФИО";
-            if (dgv.Columns["Specialty"] != null) dgv.Columns["Specialty"].HeaderText = "Специализация";
-            if (dgv.Columns["Phone"] != null) dgv.Columns["Phone"].HeaderText = "Телефон";
+                if (dgv.Columns["Id"] != null) dgv.Columns["Id"].Visible = false;
+                if (dgv.Columns["FullName"] != null) dgv.Columns["FullName"].HeaderText = "ФИО";
+                if (dgv.Columns["Specialty"] != null) dgv.Columns["Specialty"].HeaderText = "Специализация";
+                if (dgv.Columns["Phone"] != null) dgv.Columns["Phone"].HeaderText = "Телефон";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка БД: " + ex.Message, "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private bool Validate()
@@ -72,20 +82,30 @@ namespace WinFormsApp1
         private void BtnAdd_Click(object sender, EventArgs e)
         {
             if (!Validate()) return;
-            MasterStorage.Add(new Master(0,
-                txtName.Text.Trim(), txtSpecialty.Text.Trim(), txtPhone.Text.Trim()));
-            LoadMasters();
-            ClearForm();
+            try
+            {
+                // ← ЗАМЕНА: MasterStorage.Add → MasterRepository.Add
+                MasterRepository.Add(new Master(0,
+                    txtName.Text.Trim(), txtSpecialty.Text.Trim(), txtPhone.Text.Trim()));
+                LoadMasters();
+                ClearForm();
+            }
+            catch (Exception ex) { MessageBox.Show("Ошибка БД: " + ex.Message); }
         }
 
         private void BtnUpdate_Click(object sender, EventArgs e)
         {
             if (_selectedId < 0) { MessageBox.Show("Выберите мастера в таблице"); return; }
             if (!Validate()) return;
-            MasterStorage.Update(new Master(_selectedId,
-                txtName.Text.Trim(), txtSpecialty.Text.Trim(), txtPhone.Text.Trim()));
-            LoadMasters();
-            ClearForm();
+            try
+            {
+                // ← ЗАМЕНА: MasterStorage.Update → MasterRepository.Update
+                MasterRepository.Update(new Master(_selectedId,
+                    txtName.Text.Trim(), txtSpecialty.Text.Trim(), txtPhone.Text.Trim()));
+                LoadMasters();
+                ClearForm();
+            }
+            catch (Exception ex) { MessageBox.Show("Ошибка БД: " + ex.Message); }
         }
 
         private void BtnDelete_Click(object sender, EventArgs e)
@@ -93,9 +113,14 @@ namespace WinFormsApp1
             if (_selectedId < 0) { MessageBox.Show("Выберите мастера в таблице"); return; }
             if (MessageBox.Show("Удалить мастера?", "Подтверждение",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
-            MasterStorage.Delete(_selectedId);
-            LoadMasters();
-            ClearForm();
+            try
+            {
+                // ← ЗАМЕНА: MasterStorage.Delete → MasterRepository.Delete
+                MasterRepository.Delete(_selectedId);
+                LoadMasters();
+                ClearForm();
+            }
+            catch (Exception ex) { MessageBox.Show("Ошибка БД: " + ex.Message); }
         }
 
         private void Dgv_SelectionChanged(object sender, EventArgs e)
@@ -117,6 +142,6 @@ namespace WinFormsApp1
             txtSpecialty.Clear();
             txtPhone.Clear();
             dgv.ClearSelection();
-        }
+       }
     }
 }

@@ -5,15 +5,19 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using WinFormsApp1.Database;
 using WinFormsApp1.Models;
-using WinFormsApp1.Data;
+
 namespace WinFormsApp1
 {
     public partial class RegisterForm : Form
     {
+
+
         public RegisterForm()
         {
             InitializeComponent();
+
             Theme.ThemeChanged += ApplyTheme;
             FormClosed += (s, e) => Theme.ThemeChanged -= ApplyTheme;
 
@@ -53,6 +57,7 @@ namespace WinFormsApp1
             string ph = txtPhone.Text.Trim();
             string em = txtEmail.Text.Trim();
 
+            // Валидация
             if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(pass) ||
                 string.IsNullOrEmpty(fn) || string.IsNullOrEmpty(ln) ||
                 string.IsNullOrEmpty(ph))
@@ -69,18 +74,28 @@ namespace WinFormsApp1
                 return;
             }
 
-            var user = new User(login, pass, fn, ln, ph, em);
-            if (!UserStorage.Register(user))
+            // Сохранение в БД
+            try
             {
-                MessageBox.Show("Пользователь с таким логином уже существует!", "Ошибка",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                txtLogin.Focus();
-                return;
-            }
+                var user = new User(login, pass, fn, ln, ph, em);
 
-            MessageBox.Show($"Добро пожаловать, {fn}!\nТеперь войдите в систему.",
-                "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            Close();
+                if (!UserRepository.Register(user))
+                {
+                    MessageBox.Show("Пользователь с таким логином уже существует!", "Ошибка",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    txtLogin.Focus();
+                    return;
+                }
+
+                MessageBox.Show($"Добро пожаловать, {fn}!\nТеперь войдите в систему.",
+                    "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка БД: " + ex.Message, "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

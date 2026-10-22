@@ -5,25 +5,26 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-using WinFormsApp1.Data;
+using WinFormsApp1.Database;
 using WinFormsApp1.Models;
 using WinFormsApp1.Appointmentcs;
 namespace WinFormsApp1
 {
     public partial class Form2 : Form
     {
+
         private User _user;
         private int _selectedId = -1;
+
         private static bool IsInDesignMode
-    => System.ComponentModel.LicenseManager.UsageMode
-       == System.ComponentModel.LicenseUsageMode.Designtime;
+            => LicenseManager.UsageMode == LicenseUsageMode.Designtime;
+
         public Form2(User user)
         {
             InitializeComponent();
-            AutoScaleMode = AutoScaleMode.None;
             _user = user;
 
-            if (IsInDesignMode) return;   // ← защита дизайнера
+            if (IsInDesignMode) return;   // защита дизайнера
 
             // --- CRUD записи ---
             btnAdd.Click += BtnAdd_Click;
@@ -62,12 +63,19 @@ namespace WinFormsApp1
         private void ReloadMasters()
         {
             string current = cmbMaster.SelectedItem?.ToString();
-
             cmbMaster.Items.Clear();
-            foreach (var name in MasterStorage.GetNames())
-                cmbMaster.Items.Add(name);
 
-            // Восстановить выбор, если мастер ещё существует
+            try
+            {
+                // ← ЗАМЕНА: MasterStorage.GetNames → MasterRepository.GetNames
+                foreach (var name in MasterRepository.GetNames())
+                    cmbMaster.Items.Add(name);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка БД: " + ex.Message, "Ошибка");
+            }
+
             if (!string.IsNullOrEmpty(current) && cmbMaster.Items.Contains(current))
                 cmbMaster.SelectedItem = current;
         }
@@ -99,7 +107,7 @@ namespace WinFormsApp1
             Theme.StylePrimaryButton(btnUpdate);
             Theme.StylePrimaryButton(btnDelete);
             Theme.StyleAccentButton(btnToCalendar);
-            Theme.StyleAccentButton(btnMasters);    // ← стилизуем новую кнопку
+            Theme.StyleAccentButton(btnMasters);
             Theme.StylePrimaryButton(btnTheme);
 
             btnTheme.Text = Theme.IsDark ? "🌙 Тема" : "☀ Тема";
@@ -110,15 +118,23 @@ namespace WinFormsApp1
         // ---------- Таблица записей ----------
         private void LoadAppointments()
         {
-            dgv.DataSource = null;
-            dgv.DataSource = AppointmentStorage.All.ToList();
+            try
+            {
+                dgv.DataSource = null;
+                // ← ЗАМЕНА: AppointmentStorage.All → AppointmentRepository.GetAll
+                dgv.DataSource = AppointmentRepository.GetAll();
 
-            if (dgv.Columns["Id"] != null) dgv.Columns["Id"].Visible = false;
-            if (dgv.Columns["ClientName"] != null) dgv.Columns["ClientName"].HeaderText = "ФИО";
-            if (dgv.Columns["Service"] != null) dgv.Columns["Service"].HeaderText = "Услуга";
-            if (dgv.Columns["Price"] != null) dgv.Columns["Price"].HeaderText = "Стоимость";
-            if (dgv.Columns["Date"] != null) dgv.Columns["Date"].HeaderText = "Дата";
-            if (dgv.Columns["Master"] != null) dgv.Columns["Master"].HeaderText = "Мастер";
+                if (dgv.Columns["Id"] != null) dgv.Columns["Id"].Visible = false;
+                if (dgv.Columns["ClientName"] != null) dgv.Columns["ClientName"].HeaderText = "ФИО";
+                if (dgv.Columns["Service"] != null) dgv.Columns["Service"].HeaderText = "Услуга";
+                if (dgv.Columns["Price"] != null) dgv.Columns["Price"].HeaderText = "Стоимость";
+                if (dgv.Columns["Date"] != null) dgv.Columns["Date"].HeaderText = "Дата";
+                if (dgv.Columns["Master"] != null) dgv.Columns["Master"].HeaderText = "Мастер";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка БД: " + ex.Message, "Ошибка");
+            }
         }
 
         // ---------- Валидация ----------
@@ -140,22 +156,30 @@ namespace WinFormsApp1
         private void BtnAdd_Click(object sender, EventArgs e)
         {
             if (!Validate(out decimal price)) return;
-            AppointmentStorage.Add(new Appointment(
-                0, txtFio.Text.Trim(), txtService.Text.Trim(),
-                price, dtpDate.Value.Date, cmbMaster.SelectedItem.ToString()));
-            LoadAppointments();
-            ClearForm();
+            try
+            {
+                AppointmentRepository.Add(new Appointment(
+                    0, txtFio.Text.Trim(), txtService.Text.Trim(),
+                    price, dtpDate.Value.Date, cmbMaster.SelectedItem.ToString()));
+                LoadAppointments();
+                ClearForm();
+            }
+            catch (Exception ex) { MessageBox.Show("Ошибка БД: " + ex.Message); }
         }
 
         private void BtnUpdate_Click(object sender, EventArgs e)
         {
             if (_selectedId < 0) { MessageBox.Show("Выберите запись в таблице"); return; }
             if (!Validate(out decimal price)) return;
-            AppointmentStorage.Update(new Appointment(
-                _selectedId, txtFio.Text.Trim(), txtService.Text.Trim(),
-                price, dtpDate.Value.Date, cmbMaster.SelectedItem.ToString()));
-            LoadAppointments();
-            ClearForm();
+            try
+            {
+                AppointmentRepository.Update(new Appointment(
+                    _selectedId, txtFio.Text.Trim(), txtService.Text.Trim(),
+                    price, dtpDate.Value.Date, cmbMaster.SelectedItem.ToString()));
+                LoadAppointments();
+                ClearForm();
+            }
+            catch (Exception ex) { MessageBox.Show("Ошибка БД: " + ex.Message); }
         }
 
         private void BtnDelete_Click(object sender, EventArgs e)
@@ -163,9 +187,13 @@ namespace WinFormsApp1
             if (_selectedId < 0) { MessageBox.Show("Выберите запись в таблице"); return; }
             if (MessageBox.Show("Удалить запись?", "Подтверждение",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
-            AppointmentStorage.Delete(_selectedId);
-            LoadAppointments();
-            ClearForm();
+            try
+            {
+                AppointmentRepository.Delete(_selectedId);
+                LoadAppointments();
+                ClearForm();
+            }
+            catch (Exception ex) { MessageBox.Show("Ошибка БД: " + ex.Message); }
         }
 
         private void Dgv_SelectionChanged(object sender, EventArgs e)
@@ -191,7 +219,6 @@ namespace WinFormsApp1
             cmbMaster.SelectedIndex = -1;
             dgv.ClearSelection();
         }
-
     }
 
 }

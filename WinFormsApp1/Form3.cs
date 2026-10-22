@@ -5,7 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-using WinFormsApp1.Data;
+using WinFormsApp1.Database;
 
 namespace WinFormsApp1
 {
@@ -13,8 +13,8 @@ namespace WinFormsApp1
     {
         public Form3()
         {
+
             InitializeComponent();
-            AutoScaleMode = AutoScaleMode.None;
             monthCalendar.DateChanged += (s, e) => LoadForDate(monthCalendar.SelectionStart);
             btnTheme.Click += (s, e) => Theme.Toggle();
 
@@ -44,16 +44,26 @@ namespace WinFormsApp1
 
         private void LoadForDate(DateTime date)
         {
-            dgv.DataSource = null;
-            dgv.DataSource = AppointmentStorage.ByDate(date);
+            try
+            {
+                dgv.DataSource = null;
+                // ← ЗАМЕНА: AppointmentStorage.ByDate → AppointmentRepository.ByDate
+                dgv.DataSource = AppointmentRepository.ByDate(date);
 
-            if (dgv.Columns["Id"] != null) dgv.Columns["Id"].Visible = false;
-            if (dgv.Columns["ClientName"] != null) dgv.Columns["ClientName"].HeaderText = "ФИО";
-            if (dgv.Columns["Service"] != null) dgv.Columns["Service"].HeaderText = "Услуга";
-            if (dgv.Columns["Price"] != null) dgv.Columns["Price"].HeaderText = "Стоимость";
-            if (dgv.Columns["Date"] != null) dgv.Columns["Date"].HeaderText = "Дата";
-            if (dgv.Columns["Master"] != null) dgv.Columns["Master"].HeaderText = "Мастер";
-        }
+                if (dgv.Columns["Id"] != null) dgv.Columns["Id"].Visible = false;
+                if (dgv.Columns["ClientName"] != null) dgv.Columns["ClientName"].HeaderText = "ФИО";
+                if (dgv.Columns["Service"] != null) dgv.Columns["Service"].HeaderText = "Услуга";
+                if (dgv.Columns["Price"] != null) dgv.Columns["Price"].HeaderText = "Стоимость";
+                if (dgv.Columns["Date"] != null) dgv.Columns["Date"].HeaderText = "Дата";
+                if (dgv.Columns["Master"] != null) dgv.Columns["Master"].HeaderText = "Мастер";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка БД: " + ex.Message, "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            
+            }
+        } 
     }
 }
 

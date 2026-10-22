@@ -70,18 +70,18 @@
 
             // Кнопки
             this.btnAdd.Text = "Добавить";
-            this.btnAdd.Location = new Point(30, 260);
-            this.btnAdd.Size = new Size(80, 36);
+            this.btnAdd.Location = new Point(30, 360);
+            this.btnAdd.Size = new Size(90, 36);
             this.btnAdd.Name = "btnAdd";
 
             this.btnUpdate.Text = "Изменить";
-            this.btnUpdate.Location = new Point(120, 260);
-            this.btnUpdate.Size = new Size(80, 36);
+            this.btnUpdate.Location = new Point(126, 360);
+            this.btnUpdate.Size = new Size(90, 36);
             this.btnUpdate.Name = "btnUpdate";
 
             this.btnDelete.Text = "Удалить";
-            this.btnDelete.Location = new Point(210, 260);
-            this.btnDelete.Size = new Size(80, 36);
+            this.btnDelete.Location = new Point(222, 360);
+            this.btnDelete.Size = new Size(90, 36);
             this.btnDelete.Name = "btnDelete";
 
             // Таблица

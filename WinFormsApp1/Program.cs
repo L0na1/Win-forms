@@ -1,5 +1,6 @@
+
+using WinFormsApp1.Database;
 using WinFormsApp1.Models;
-using WinFormsApp1.Data;
 namespace WinFormsApp1
 {
     internal static class Program
@@ -10,14 +11,35 @@ namespace WinFormsApp1
         [STAThread]
         static void Main()
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            UserStorage.Load();
-            AppointmentStorage.Load();
-            MasterStorage.Load();
-            Application.Run(new Form1());
+
+            // 1. Загружаем сохранённые настройки
+            var settings = ConnectionSettings.Load();
+
+            // 2. Если стоит галочка "Запомнить" и есть пароль — пробуем подключиться сразу
+            if (settings.Remember && !string.IsNullOrEmpty(settings.Password))
+            {
+                try
+                {
+                    // Пробуем установить соединение (ВОТ ЗДЕСЬ ДОБАВИЛСЯ .SetConnection)
+                    Database.Database.SetConnection(settings.Host, settings.Port, settings.Database, settings.User, settings.Password);
+
+                    // Если всё ок — сразу запускаем вход
+                    Application.Run(new Form1());
+                    return; // Завершаем Main, чтобы не запускать ConnectionForm
+                }
+                catch
+                {
+                    // Если подключиться не удалось (например, БД выключена) — 
+                    // идём дальше и показываем форму подключения
+                }
+            }
+
+            // 3. Если галочки нет или подключение не удалось — показываем форму подключения
+            Application.Run(new ConnectionForm());
         }
+
+    
     }
 }

@@ -169,12 +169,17 @@ namespace WinFormsApp1
         // Свой placeholder: серый текст, который исчезает при фокусе и на вводе
         public static void AttachPlaceholder(TextBox tb, string placeholder, bool isPassword = false)
         {
+            // Защита от повторной подписки (если метод вызовут дважды)
+            if (tb.Tag is string existing && existing == placeholder)
+                return;
+
             tb.Text = placeholder;
             tb.ForeColor = TextMuted;
             tb.Tag = placeholder;
             tb.UseSystemPasswordChar = false;
 
-            tb.GotFocus += (s, e) =>
+            // ИСПОЛЬЗУЕМ Enter/Leave ВМЕСТО GotFocus/LostFocus
+            tb.Enter += (s, e) =>
             {
                 if (tb.Text == (string)tb.Tag)
                 {
@@ -183,7 +188,8 @@ namespace WinFormsApp1
                     if (isPassword) tb.UseSystemPasswordChar = true;
                 }
             };
-            tb.LostFocus += (s, e) =>
+
+            tb.Leave += (s, e) =>
             {
                 if (string.IsNullOrWhiteSpace(tb.Text))
                 {
@@ -192,6 +198,7 @@ namespace WinFormsApp1
                     if (isPassword) tb.UseSystemPasswordChar = false;
                 }
             };
+
             tb.TextChanged += (s, e) =>
             {
                 if (tb.Text != (string)tb.Tag)
